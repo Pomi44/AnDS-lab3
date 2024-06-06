@@ -169,7 +169,36 @@ public:
         }
         return result;
     }
+    Vertex find_optimal_warehouse(Graph<Vertex, Distance> graph) {
+        auto vertices = graph.vertices();
+        Vertex optimal_vertex;
+        Distance min_average_distance = std::numeric_limits<Distance>::max();
 
+        for (const auto& vertex : vertices) {
+            Distance total_distance = 0;
+            int count = 0;
+
+            for (const auto& other : vertices) {
+                if (vertex != other) {
+                    auto path = graph.shortest_path(vertex, other);
+                    Distance path_distance = 0;
+                    for (const auto& edge : path) {
+                        path_distance += edge.distance;
+                    }
+                    total_distance += path_distance;
+                    count++;
+                }
+            }
+
+            Distance average_distance = total_distance / count;
+            if (average_distance < min_average_distance) {
+                min_average_distance = average_distance;
+                optimal_vertex = vertex;
+            }
+        }
+
+        return optimal_vertex;
+    }
 private:
     std::unordered_map<Vertex, std::vector<Edge>> _graph;
 };
@@ -178,33 +207,32 @@ private:
 int main() {
     Graph<std::string> g;
 
-    // Добавление вершин
     g.add_vertex("A");
     g.add_vertex("B");
     g.add_vertex("C");
     g.add_vertex("D");
 
-    // Добавление ребер
-    g.add_edge("A", "B", 1.0);
+    g.add_edge("A", "B", 8.0);
     g.add_edge("A", "C", 4.0);
-    g.add_edge("B", "C", 2.0);
+    g.add_edge("B", "C", 9.0);
     g.add_edge("B", "D", 5.0);
-    g.add_edge("C", "D", 1.0);
+    g.add_edge("C", "D", 3.0);
 
-    // Поиск кратчайшего пути
     auto path = g.shortest_path("A", "D");
     std::cout << "Shortest path from A to D:" << std::endl;
     for (const auto& edge : path) {
         std::cout << edge.from << " -> " << edge.to << " (distance: " << edge.distance << ")" << std::endl;
     }
 
-    // Обход в глубину
     auto walk_result = g.walk("A");
     std::cout << "DFS walk starting from A:" << std::endl;
     for (const auto& vertex : walk_result) {
         std::cout << vertex << " ";
     }
     std::cout << std::endl;
+
+    auto hub = g.find_optimal_warehouse(g);
+    std::cout << "Optimal hub: " << hub << std::endl;
 
     return 0;
 }
